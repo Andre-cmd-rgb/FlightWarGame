@@ -1,36 +1,41 @@
+import ctypes
+import logging
+import os
+import requests
+import tempfile
+import zipfile
+
+from PIL import Image, ImageTk  # Import Pillow for working with images
 import tkinter as tk
 from tkinter import messagebox
-from PIL import Image, ImageTk  # Import Pillow for working with images
-import requests
-import os
-import zipfile
-import tempfile
-import ctypes
 
+# Constants
+OWNER = "Andre-cmd-rgb"
+REPO = "FlightWarGame"
+ASSET_NAME = "game.zip"
+TARGET_DIR = r"C:\Program Files\Game Launcher\Game"
+
+
+
+# Check for admin privileges
 if not ctypes.windll.shell32.IsUserAnAdmin():
-    print('Not enough priviledge, restarting...')
+    print('Not enough privilege, restarting...')
     import sys
     ctypes.windll.shell32.ShellExecuteW(
         None, 'runas', sys.executable, ' '.join(sys.argv), None, None)
     sys.exit()
-
 else:
     print('Elevated privilege acquired')
 
 
-owner = "Andre-cmd-rgb"
-repo = "FlightWarGame"
-asset_name = "game.zip"
-target_dir = r"C:\Program Files\Game Launcher\Game"
-#installed_version = "0.2.0"
-
-
-version_file_path = os.path.join(target_dir, "version.txt")
+# Set up logging
+logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+# Check for installed version
+version_file_path = os.path.join(TARGET_DIR, "version.txt")
 if os.path.isfile(version_file_path):
     with open(version_file_path, "r") as version_file:
-        installed_version = version_file.read().strip() 
+        installed_version = version_file.read().strip()
 
-# Your existing functions (download_and_extract_github_release, is_newest_version_installed, launch_game) go here
 def download_and_extract_github_release(owner, repo, asset_name, target_dir):
     # Define the GitHub API URL for the releases of the repository
     api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
@@ -101,35 +106,35 @@ def is_newest_version_installed(owner, repo, asset_name, installed_version):
         print(f"Error: {e}")
         return False
 
-
-
-
-
-def launchgame():
-    import os
-    if not is_newest_version_installed(owner, repo, asset_name, installed_version):
-        download_and_extract_github_release(owner, repo, asset_name, target_dir)
+def launch_game():
+    logging.info('Checking if the newest version is installed...')
+    if not is_newest_version_installed(OWNER, REPO, ASSET_NAME, installed_version):
+        logging.info('Newest version not installed. Downloading and extracting...')
+        download_and_extract_github_release(OWNER, REPO, ASSET_NAME, TARGET_DIR)
+    logging.info('Launching game...')
     os.system(r'"C:\Program Files\Game Launcher\Game\fly1-test.exe"')
-    
-        
+
+
+
 def update_launch_button():
-    if is_newest_version_installed(owner, repo, asset_name, installed_version):
+    if is_newest_version_installed(OWNER, REPO, ASSET_NAME, installed_version):
         launch_button.config(text="Launch", state=tk.NORMAL)
     else:
         launch_button.config(text="Update", state=tk.NORMAL)
 
-# Function to create a round button
 def create_round_button(parent, radius, text, command):
     button = tk.Button(parent, text=text, width=6*radius, height=radius, relief="flat", bg="white", fg="black", command=command)
     button.place(relx=0.5, rely=0.5, anchor="center")
     return button
+
 # Create the main window
 root = tk.Tk()
 root.title("Game Launcher")
-window_width = 800
-window_height = 600
+window_width = 1200
+window_height = 800
 root.geometry(f"{window_width}x{window_height}")
 root.resizable(False, False)
+
 # Load the background image
 bg_image = Image.open(r"C:\Program Files\Game Launcher\assets\background.png")
 bg_photo = ImageTk.PhotoImage(bg_image)
@@ -142,7 +147,7 @@ frame = tk.Frame(root)
 frame.place(relx=0.5, rely=0.5, anchor="center")
 
 # Create a round button for launching or updating
-launch_button = create_round_button(frame, 1, "Checking for updates...", launchgame)
+launch_button = create_round_button(frame, 1, "Checking for updates...", launch_game)
 launch_button.pack()  # Pack the button within the frame
 
 # Update the button label during app startup
