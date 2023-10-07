@@ -4,7 +4,7 @@ import os
 import requests
 import tempfile
 import zipfile
-
+import time
 from PIL import Image, ImageTk  # Import Pillow for working with images
 import tkinter as tk
 from tkinter import messagebox
@@ -72,12 +72,12 @@ def download_and_extract_github_release(owner, repo, asset_name, target_dir):
                 with zipfile.ZipFile(download_path, 'r') as zip_ref:
                     zip_ref.extractall(target_dir)
 
-            print(f"Downloaded and extracted {asset_name} successfully to {target_dir}")
+            logging.info(f"Downloaded and extracted {asset_name} successfully to {target_dir}")
         else:
-            print(f"Asset '{asset_name}' not found in the latest release")
+            logging.info(f"Asset '{asset_name}' not found in the latest release")
 
     except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
 
 def is_newest_version_installed(owner, repo, asset_name, installed_version):
     # Define the GitHub API URL for the releases of the repository
@@ -96,14 +96,14 @@ def is_newest_version_installed(owner, repo, asset_name, installed_version):
 
         # Compare the installed version with the latest version
         if latest_version == installed_version:
-            print(f"The newest version ({latest_version}) is already installed.")
+            logging.info(f"The newest version ({latest_version}) is already installed.")
             return True
         else:
-            print(f"A newer version ({latest_version}) is available.")
+            logging.info(f"A newer version ({latest_version}) is available.")
             return False
 
     except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         return False
 
 def launch_game():
@@ -113,7 +113,6 @@ def launch_game():
         download_and_extract_github_release(OWNER, REPO, ASSET_NAME, TARGET_DIR)
     logging.info('Launching game...')
     os.system(r'"C:\Program Files\Game Launcher\Game\fly1-test.exe"')
-
 
 
 def update_launch_button():
@@ -152,5 +151,6 @@ launch_button.pack()  # Pack the button within the frame
 
 # Update the button label during app startup
 update_launch_button()
+
 
 root.mainloop()
